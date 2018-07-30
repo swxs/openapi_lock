@@ -1,0 +1,6 @@
+build/*.js
+config/*.js
+src/common/js/*.js
+static/js/d3.min.js
+static/js/vizuly_core.js
+static/js/vizuly_radialprogress.js
