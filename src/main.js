@@ -22,10 +22,15 @@ axios.interceptors.response.use(function (response) {
     console.log('Not imp')
     return data
   }
+  if (data.errcode === 1) {
+    console.log(data.errmsg)
+    return data
+    // document.vue.$Message.warning(data.errmsg)
+  }
   if (typeof (data) === 'string') {
     return response
   }
-  response.ajax_code = data.errcode
+  response.errcode = data.errcode
   response.errmsg = data.errmsg || ''
   response.data = data.data
   return response
