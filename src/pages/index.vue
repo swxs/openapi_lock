@@ -91,8 +91,10 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="less" scoped>
-  #main {
-    padding: 40px 100px;
+  @media (min-width: 500px){
+    #main {
+      padding: 40px 100px;
+    }
   }
   .for_copy {
       position: absolute;
