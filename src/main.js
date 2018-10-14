@@ -42,6 +42,7 @@ axios.interceptors.response.use(function (response) {
 // 请求拦截
 axios.interceptors.request.use(function (config) {
   const tem = (config.url.indexOf('?') !== -1) ? '&' : '?'
+  config.headers['access_token'] = 'eyJhbGciOiJIUzI1NiIsImlhdCI6MTUzOTUyNDAwMCwiZXhwIjoxNzY4NDg0MDAwfQ.eyJpZCI6IjViYzM0NDVmZWRlMjRjNzI4MTQyOWE4OCIsImlhdCI6MTUzOTUyNDAwMC4yMjcyOTQ3fQ.XcZCe_Cyl6qxlvkTyDIFc0TuPI2yXvnfn9dh1ObtmoA'
   if (config.method === 'get') {
     config.url += tem + 'time_stamp=' + new Date().getTime()
   }
