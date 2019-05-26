@@ -2,32 +2,33 @@ var path = require('path')
 var utils = require('./utils')
 var config = require('../config')
 var vueLoaderConfig = require('./vue-loader.conf')
-var webpack  = require('webpack')
+var webpack = require('webpack')
 
-function resolve (dir) {
+function resolve(dir) {
   return path.join(__dirname, '..', dir)
 }
 
 module.exports = {
   entry: {
-    app: ["babel-polyfill", "./src/main.js"]
+    app: ['babel-polyfill', './src/main.js']
   },
   output: {
     path: config.build.assetsRoot,
     filename: '[name].js',
-    publicPath: process.env.NODE_ENV === 'production'
-      ? config.build.assetsPublicPath
-      : config.dev.assetsPublicPath
+    publicPath:
+      process.env.NODE_ENV === 'production'
+        ? config.build.assetsPublicPath
+        : config.dev.assetsPublicPath
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
-      'vue$': 'vue/dist/vue.esm.js',
+      vue$: 'vue/dist/vue.esm.js',
       '@': resolve('src'),
-      'Components': path.resolve(__dirname, '../src/components/'),
-      'Pages': path.resolve(__dirname, '../src/pages/'),
-      'Common': path.resolve(__dirname, '../src/common/'),
-      'Static': path.resolve(__dirname, '../static')
+      Components: path.resolve(__dirname, '../src/components/'),
+      Pages: path.resolve(__dirname, '../src/pages/'),
+      Common: path.resolve(__dirname, '../src/common/'),
+      Static: path.resolve(__dirname, '../static')
     }
   },
   module: {
@@ -53,7 +54,7 @@ module.exports = {
       },
       {
         test: /\.less$/,
-        loader: "style-loader!css-loader!less-loader"
+        loader: 'style-loader!css-loader!less-loader'
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,

@@ -7,16 +7,22 @@ module.exports = {
     sourceType: 'module'
   },
   env: {
-    browser: true,
+    browser: true
   },
   // https://github.com/feross/standard/blob/master/RULES.md#javascript-standard-style
   extends: 'standard',
   // required to lint *.vue files
-  plugins: [
-    'html'
-  ],
+  plugins: ['html'],
   // add your custom rules here
-  'rules': {
+  rules: {
+    'space-before-function-paren': [
+      'error',
+      {
+        anonymous: 'never',
+        named: 'never',
+        asyncArrow: 'always'
+      }
+    ],
     // allow paren-less arrow functions
     'arrow-parens': 0,
     // allow async-await
@@ -25,6 +31,9 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
     'no-eval': 0,
     // 配置了eslint引入变量不使用的规则 -- proDelivery
-    "no-unused-vars": ["warn", { "vars": "local", "args": "none", "ignoreRestSiblings": false }]
+    'no-unused-vars': [
+      'warn',
+      { vars: 'local', args: 'none', ignoreRestSiblings: false }
+    ]
   }
 }
