@@ -56,11 +56,11 @@
 
 <script>
 import {
-  getPasswordLock,
-  getPasswordLocklist,
+  searchPasswordLock,
+  selectPasswordLock,
   createPasswordLock,
   deletePasswordLock
-} from '../api/password_lock.js'
+} from '../api/PasswordLock.js'
 
 export default {
   name: 'home',
@@ -76,8 +76,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    const result = await getPasswordLocklist()
-    this.locks = result
+    this.locks = await searchPasswordLock()
   },
   methods: {
     copy(lockId, value) {
@@ -97,7 +96,7 @@ export default {
         website: this.website
       }
       const passwordLockId = await createPasswordLock(data)
-      const result = await getPasswordLock(passwordLockId)
+      const result = await selectPasswordLock(passwordLockId)
       this.locks.splice(0, 0, result)
       this.name = ''
       this.website = ''
