@@ -55,6 +55,13 @@
 </template>
 
 <script>
+import {
+  getPasswordLock,
+  getPasswordLocklist,
+  createPasswordLock,
+  deletePasswordLock
+} from '../api/password_lock.js'
+
 export default {
   name: 'home',
   data() {
@@ -68,20 +75,19 @@ export default {
   computed: {},
   components: {},
   created() {},
-  mounted() {
-    this.$http.get('/api/password_lock/').then((response) => {
-      this.locks = response.data
-    })
+  async mounted() {
+    const result = await getPasswordLocklist()
+    this.locks = result
   },
   methods: {
-    copy: function(lockId, value) {
+    copy(lockId, value) {
       let ele = document.getElementById(lockId)
       ele.value = value
       ele.focus()
       ele.select()
       document.execCommand('Copy')
     },
-    add_lock: function() {
+    async add_lock() {
       if (this.name === '' || this.name === null) {
         return false
       }
@@ -90,23 +96,15 @@ export default {
         key: this.name,
         website: this.website
       }
-      this.$http.post('/api/password_lock/', data).then((response) => {
-        if (response.errcode === 0) {
-          this.locks.push(response.data)
-          this.name = ''
-          this.website = ''
-        }
-      })
+      const passwordLockId = await createPasswordLock(data)
+      const result = await getPasswordLock(passwordLockId)
+      this.locks.splice(0, 0, result)
+      this.name = ''
+      this.website = ''
     },
-    delete_lock: function(lockId) {
-      this.$http
-        .delete('/api/password_lock/' + lockId + '/')
-        .then((response) => {
-          this.locks.splice(
-            this.locks.findIndex((item) => item.id === lockId),
-            1
-          )
-        })
+    async delete_lock(lockId) {
+      const result = await deletePasswordLock(lockId)
+      this.locks.splice(this.locks.findIndex((item) => item.id === lockId), 1)
     }
   }
 }
