@@ -36,10 +36,10 @@ service.interceptors.request.use(
 )
 service.interceptors.response.use(
   (data) => {
-    if (data.data.errcode === 0) {
+    if (data.data.code === 0) {
       return data.data.data
     } else {
-      return Promise.reject(data.data.errcode)
+      return Promise.reject(data.data.code)
     }
   },
   (error) => {

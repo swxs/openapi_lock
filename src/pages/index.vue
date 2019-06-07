@@ -76,7 +76,8 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    this.locks = await searchPasswordLock()
+    let result = await searchPasswordLock({pager: 0})
+    this.locks = result.data
   },
   methods: {
     copy(lockId, value) {
