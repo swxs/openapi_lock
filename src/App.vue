@@ -5,15 +5,8 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'app',
-  components: {}
-}
-</script>
-
 <style lang="less">
-@import './common/style/base.less';
-@import './common/style/common.less';
-@import './common/fonts/iconfont.less';
+@import './assets/style/base.less';
+@import './assets/style/common.less';
+@import './assets/fonts/iconfont.less';
 </style>

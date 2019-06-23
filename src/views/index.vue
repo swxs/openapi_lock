@@ -76,7 +76,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchPasswordLock({pager: 0})
+    let result = await searchPasswordLock({ pager: 0 })
     this.locks = result.data
   },
   methods: {
@@ -116,6 +116,9 @@ export default {
   #main {
     padding: 40px 100px;
   }
+}
+.content_block {
+  text-align: left;
 }
 .for_copy {
   position: absolute;
