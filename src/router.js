@@ -9,12 +9,12 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Index
+      component: Index,
     },
     {
       path: '*',
       name: 'NotFound',
-      component: () => import('./views/404.vue')
-    }
-  ]
+      component: () => import('./views/404.vue'),
+    },
+  ],
 })

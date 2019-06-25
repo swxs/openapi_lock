@@ -7,7 +7,7 @@
 <script>
 export default {
   name: 'NotFound',
-  components: {}
+  components: {},
 }
 </script>
 
