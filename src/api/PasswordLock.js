@@ -12,7 +12,7 @@ export const searchPasswordLock = (data) => {
 
 export const selectPasswordLock = (id) => {
   return new Promise(function(resolve, reject) {
-    window.axios.request.get(`${PasswordLockUrl}${id}/`).then((response) => {
+    window.axios.get(`${PasswordLockUrl}${id}/`).then((response) => {
       resolve(response.data)
     })
   })
@@ -20,7 +20,7 @@ export const selectPasswordLock = (id) => {
 
 export const createPasswordLock = (data) => {
   return new Promise(function(resolve, reject) {
-    window.axios.request.post(`${PasswordLockUrl}`, data).then((response) => {
+    window.axios.post(`${PasswordLockUrl}`, data).then((response) => {
       resolve(response.data)
     })
   })
@@ -28,7 +28,7 @@ export const createPasswordLock = (data) => {
 
 export const copyPasswordLock = (id, data) => {
   return new Promise(function(resolve, reject) {
-    window.axios.request
+    window.axios
       .post(`${PasswordLockUrl}${id}/`, data)
       .then((response) => {
         resolve(response.data)
@@ -38,7 +38,7 @@ export const copyPasswordLock = (id, data) => {
 
 export const updatePasswordLock = (id, data) => {
   return new Promise(function(resolve, reject) {
-    window.axios.request
+    window.axios
       .put(`${PasswordLockUrl}${id}/`, data)
       .then((response) => {
         resolve(response.data)
@@ -48,7 +48,7 @@ export const updatePasswordLock = (id, data) => {
 
 export const modifyPasswordLock = (id, data) => {
   return new Promise(function(resolve, reject) {
-    window.axios.request
+    window.axios
       .patch(`${PasswordLockUrl}${id}/`, data)
       .then((response) => {
         resolve(response.data)
@@ -58,7 +58,7 @@ export const modifyPasswordLock = (id, data) => {
 
 export const deletePasswordLock = (id) => {
   return new Promise(function(resolve, reject) {
-    window.axios.request.delete(`${PasswordLockUrl}${id}/`).then((response) => {
+    window.axios.delete(`${PasswordLockUrl}${id}/`).then((response) => {
       resolve(response.data)
     })
   })
