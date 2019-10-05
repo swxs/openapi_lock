@@ -92,7 +92,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchPasswordLock({ pager: 0 })
+    let result = await searchPasswordLock({ use_pager: 0, order_by: "-created"})
     this.locks = result.data
   },
   methods: {

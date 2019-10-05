@@ -28,31 +28,25 @@ export const createPasswordLock = (data) => {
 
 export const copyPasswordLock = (id, data) => {
   return new Promise(function(resolve, reject) {
-    window.axios
-      .post(`${PasswordLockUrl}${id}/`, data)
-      .then((response) => {
-        resolve(response.data)
-      })
+    window.axios.post(`${PasswordLockUrl}${id}/`, data).then((response) => {
+      resolve(response.data)
+    })
   })
 }
 
 export const updatePasswordLock = (id, data) => {
   return new Promise(function(resolve, reject) {
-    window.axios
-      .put(`${PasswordLockUrl}${id}/`, data)
-      .then((response) => {
-        resolve(response.data)
-      })
+    window.axios.put(`${PasswordLockUrl}${id}/`, data).then((response) => {
+      resolve(response.data)
+    })
   })
 }
 
 export const modifyPasswordLock = (id, data) => {
   return new Promise(function(resolve, reject) {
-    window.axios
-      .patch(`${PasswordLockUrl}${id}/`, data)
-      .then((response) => {
-        resolve(response.data)
-      })
+    window.axios.patch(`${PasswordLockUrl}${id}/`, data).then((response) => {
+      resolve(response.data)
+    })
   })
 }
 
