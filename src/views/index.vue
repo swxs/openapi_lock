@@ -112,9 +112,9 @@ export default {
         key: this.name,
         website: this.website,
       }
-      const passwordLockId = await createPasswordLock(data)
-      const result = await selectPasswordLock(passwordLockId)
-      this.locks.splice(0, 0, result)
+      const passwordLock = await createPasswordLock(data)
+      const result = await selectPasswordLock(passwordLock.id)
+      this.locks.splice(0, 0, result.data)
       this.name = ''
       this.website = ''
     },
