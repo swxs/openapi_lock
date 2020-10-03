@@ -14,6 +14,7 @@
         ></iframe>
       </el-main>
     </el-container>
+    <div @click="sendMessage">向iframe发送信息</div>
     <router-view v-if="login"></router-view>
     <!--所有的页面都将加载到此处,app.vue只提供一个容器-->
   </div>
@@ -27,9 +28,8 @@ export default {
   components: {},
   data() {
     return {
-      img_src: '',
       src: 'http://localhost:8081/home#/',
-      login: false,
+      login: true,
       iframeWin: {},
     }
   },
@@ -38,9 +38,10 @@ export default {
   methods: {
     getLogin() {
       let token = getToken()
-      return Boolean(token)
     },
     sendMessage() {
+      console.log('parent set')
+      console.log(this.iframeWin.postMessage)
       // 外部vue向iframe内部传数据
       this.iframeWin.postMessage(
         {
@@ -49,6 +50,7 @@ export default {
         },
         '*'
       )
+      console.log('parent setted')
     },
     async handleMessage(event) {
       // 根据上面制定的结构来解析iframe内部发回来的数据
@@ -57,8 +59,13 @@ export default {
       switch (data.cmd) {
         case 'returnToken':
           // 业务逻辑
-          setToken(data.params.token)
-          this.login = this.getLogin()
+          let token = data.params.token
+          if (token) {
+            setToken(token)
+            this.login = true
+          } else {
+            this.login = false
+          }
       }
     },
   },
@@ -67,7 +74,10 @@ export default {
     // 在外部vue的window上添加postMessage的监听，并且绑定处理函数handleMessage
     window.addEventListener('message', this.handleMessage)
     this.iframeWin = this.$refs.iframe.contentWindow
-    this.login = this.getLogin()
+    let token = getToken()
+    if (!token) {
+      this.sendMessage()
+    }
   },
 }
 </script>
@@ -80,7 +90,7 @@ export default {
 .login-block {
   width: 20%;
   min-width: 800px;
-  margin:100px auto 0;
+  margin: 100px auto 0;
 
   .login-img {
     width: 40%;

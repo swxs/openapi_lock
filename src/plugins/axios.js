@@ -2,14 +2,7 @@
 
 import Vue from 'vue'
 import axios from 'axios'
-import {
-  getToken,
-  getRefreshToken,
-  setToken,
-  setRefreshToken,
-  removeToken,
-  removeRefreshToken,
-} from '../utils/auth'
+import { getToken, setToken, removeToken } from '../utils/auth'
 
 // Full config:  https://github.com/axios/axios#request-config
 // axios.defaults.baseURL = process.env.baseURL || process.env.apiUrl || '';
@@ -33,20 +26,17 @@ service.interceptors.request.use(
     }
 
     const token = getToken()
-    const refreshToken = getRefreshToken()
     if (token) {
       config.headers.common['Authorization'] = `Bearer ${token}`
     } else {
-      config.headers.common['Authorization'] = `Bearer ${refreshToken}`
+      // todo 没有token时暂存请求， 等待响应后调用
     }
-
     return config
   },
   (error) => {
     return Promise.reject(error)
   }
 )
-
 
 // Add a response interceptor
 service.interceptors.response.use(
