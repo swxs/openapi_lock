@@ -1,59 +1,27 @@
+import Vue from 'vue'
+
 const PasswordLockUrl = '/api/password_lock/password_lock/'
 
-export const searchPasswordLock = (data) => {
-  return new Promise(function(resolve, reject) {
-    window.axios
-      .get(`${PasswordLockUrl}`, { params: data })
-      .then((response) => {
-        resolve(response)
-      })
-  })
+export async function searchPasswordLock(data){
+  return Vue.axios.get(`${PasswordLockUrl}`, { params: data })
 }
 
-export const selectPasswordLock = (id) => {
-  return new Promise(function(resolve, reject) {
-    window.axios.get(`${PasswordLockUrl}${id}/`).then((response) => {
-      resolve(response.data)
-    })
-  })
+export async function selectPasswordLock(id){
+  return Vue.axios.get(`${PasswordLockUrl}${id}/`)
 }
 
-export const createPasswordLock = (data) => {
-  return new Promise(function(resolve, reject) {
-    window.axios.post(`${PasswordLockUrl}`, data).then((response) => {
-      resolve(response.data)
-    })
-  })
+export async function createPasswordLock(data){
+  return Vue.axios.post(`${PasswordLockUrl}`, data)
 }
 
-export const copyPasswordLock = (id, data) => {
-  return new Promise(function(resolve, reject) {
-    window.axios.post(`${PasswordLockUrl}${id}/`, data).then((response) => {
-      resolve(response.data)
-    })
-  })
+export async function copyPasswordLock(id, data){
+  return Vue.axios.post(`${PasswordLockUrl}${id}/`, data)
 }
 
-export const updatePasswordLock = (id, data) => {
-  return new Promise(function(resolve, reject) {
-    window.axios.put(`${PasswordLockUrl}${id}/`, data).then((response) => {
-      resolve(response.data)
-    })
-  })
+export async function updatePasswordLock(id, data){
+  return Vue.axios.put(`${PasswordLockUrl}${id}/`, data)
 }
 
-export const modifyPasswordLock = (id, data) => {
-  return new Promise(function(resolve, reject) {
-    window.axios.patch(`${PasswordLockUrl}${id}/`, data).then((response) => {
-      resolve(response.data)
-    })
-  })
-}
-
-export const deletePasswordLock = (id) => {
-  return new Promise(function(resolve, reject) {
-    window.axios.delete(`${PasswordLockUrl}${id}/`).then((response) => {
-      resolve(response.data)
-    })
-  })
+export async function deletePasswordLock(id){
+  return Vue.axios.delete(`${PasswordLockUrl}${id}/`)
 }

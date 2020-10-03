@@ -75,6 +75,7 @@ import {
   searchPasswordLock,
   selectPasswordLock,
   createPasswordLock,
+  updatePasswordLock,
   deletePasswordLock,
 } from '../api/PasswordLock.js'
 
@@ -82,7 +83,6 @@ export default {
   name: 'home',
   data() {
     return {
-      id: 'qwe',
       name: null,
       website: null,
       locks: [],
@@ -92,8 +92,8 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchPasswordLock({ use_pager: 0, order_by: "-created"})
-    this.locks = result.data
+    let result = await searchPasswordLock({ use_pager: 0, orderby: '-created' })
+    this.locks = result.data.data
   },
   methods: {
     copy(lockId, value) {
@@ -112,9 +112,9 @@ export default {
         key: this.name,
         website: this.website,
       }
-      const passwordLockId = await createPasswordLock(data)
-      const result = await selectPasswordLock(passwordLockId)
-      this.locks.splice(0, 0, result)
+      const passwordLock = await createPasswordLock(data)
+      const result = await selectPasswordLock(passwordLock.data.id)
+      this.locks.splice(0, 0, result.data.data)
       this.name = ''
       this.website = ''
     },
