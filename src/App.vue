@@ -14,7 +14,6 @@
         ></iframe>
       </el-main>
     </el-container>
-    <div @click="sendMessage">向iframe发送信息</div>
     <router-view v-if="login"></router-view>
     <!--所有的页面都将加载到此处,app.vue只提供一个容器-->
   </div>
@@ -28,8 +27,10 @@ export default {
   components: {},
   data() {
     return {
-      src: 'http://localhost:8081/home#/',
+      src: process.env.VUE_APP_AUTH_IFRAME_URL,
       login: true,
+      iframeNeed: false,
+      iframeReady: false,
       iframeWin: {},
     }
   },
@@ -39,24 +40,35 @@ export default {
     getLogin() {
       let token = getToken()
     },
-    sendMessage() {
-      console.log('parent set')
-      console.log(this.iframeWin.postMessage)
+    sendMessage(data) {
+      console.log(`parent send: `, data)
       // 外部vue向iframe内部传数据
-      this.iframeWin.postMessage(
-        {
-          cmd: 'getToken',
-          params: {},
-        },
-        '*'
-      )
-      console.log('parent setted')
+      this.iframeWin.postMessage(data, '*')
     },
     async handleMessage(event) {
       // 根据上面制定的结构来解析iframe内部发回来的数据
       const data = event.data
-      console.log(`parent get [${data.cmd}]: ${data.params}`, data)
+      console.log(`parent get: `, data)
       switch (data.cmd) {
+        case 'ready':
+          this.iframeReady = true
+          if (this.iframeNeed) {
+            this.sendMessage({
+              cmd: 'getToken',
+              params: {},
+            })
+          }
+          break
+        case 'getToken':
+          this.iframeNeed = true
+          if (iframeReady) {
+            this.sendMessage({
+              cmd: 'getToken',
+              params: {},
+            })
+          } else {
+          }
+          break
         case 'returnToken':
           // 业务逻辑
           let token = data.params.token
@@ -66,18 +78,21 @@ export default {
           } else {
             this.login = false
           }
+          this.iframeNeed = false
+          break
       }
     },
   },
   created() {},
-  mounted() {
+  beforeMount() {
     // 在外部vue的window上添加postMessage的监听，并且绑定处理函数handleMessage
     window.addEventListener('message', this.handleMessage)
+  },
+  mounted() {
     this.iframeWin = this.$refs.iframe.contentWindow
-    let token = getToken()
-    if (!token) {
-      this.sendMessage()
-    }
+  },
+  beforeDestroy() {
+    window.removeEventListener('message', this.handleMessage)
   },
 }
 </script>
