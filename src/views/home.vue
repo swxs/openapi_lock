@@ -64,11 +64,12 @@
 
 <script>
 import {
-  searchWord,
-  selectWord,
-  createWord,
-  deleteWord,
-} from '../api/Word.js'
+  searchPasswordLock,
+  selectPasswordLock,
+  createPasswordLock,
+  updatePasswordLock,
+  deletePasswordLock,
+} from '../api/PasswordLock.js'
 import { MessageBox } from 'element-ui'
 
 export default {
@@ -90,7 +91,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchWord({ order_by: '-created' })
+    let result = await searchPasswordLock({ orderby: '-created' })
     this.tableData = result.data
   },
   methods: {
@@ -110,7 +111,7 @@ export default {
       
     },
     async deleteRow(index, rows) {
-      const result = await deleteWord(rows[index].id)
+      const result = await deletePasswordLock(rows[index].id)
       rows.splice(index, 1)
     },
   },
