@@ -61,7 +61,7 @@ export default {
           break
         case 'getToken':
           this.iframeNeed = true
-          if (iframeReady) {
+          if (this.iframeReady) {
             this.sendMessage({
               cmd: 'getToken',
               params: {},
