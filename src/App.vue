@@ -14,8 +14,8 @@
         ></iframe>
       </el-main>
     </el-container>
+    <!--所有的页面都将加载到此处-->
     <router-view v-if="login"></router-view>
-    <!--所有的页面都将加载到此处,app.vue只提供一个容器-->
   </div>
 </template>
 
@@ -84,7 +84,9 @@ export default {
       }
     },
   },
-  created() {},
+  created() {
+    document.title = "密码管理";
+  },
   beforeMount() {
     // 在外部vue的window上添加postMessage的监听，并且绑定处理函数handleMessage
     window.addEventListener('message', this.handleMessage)
