@@ -2,7 +2,7 @@
   <div id="app">
     <el-container v-show="!login" class="login-block">
       <el-aside class="login-img img-block">
-        <img src="./static/login.png" />
+        <img src="./assets/img/login.png" />
       </el-aside>
       <el-main class="login-iframe">
         <iframe
@@ -101,9 +101,9 @@ export default {
 </script>
 
 <style lang="less">
+@import './assets/fonts/iconfont.less';
 @import './assets/style/base.less';
 @import './assets/style/common.less';
-@import './assets/fonts/iconfont.less';
 
 .login-block {
   width: 20%;

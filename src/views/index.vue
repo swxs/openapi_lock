@@ -24,7 +24,7 @@
         </span>
         <span class="content_block WD_w1 MB_w2 tc">
           <i
-            class="iconfont icon-xiugai util_add"
+            class="iconfont iconbi util_add"
             title="点击添加记录"
             @click="add_lock"
           ></i>
@@ -44,22 +44,19 @@
           <span class="content_block WD_w6 MB_w2">
             <a class="link" :href="lock.website" target="_blank">
               <span class="MB_hide">{{ lock.website }}</span>
-              <i
-                class="iconfont icon-tiaozhuan WD_hide"
-                :title="lock.website"
-              ></i>
+              <i class="iconfont iconlianjie WD_hide" :title="lock.website"></i>
             </a>
           </span>
           <span class="content_block WD_w1 MB_w2 tc">
             <i
-              class="iconfont icon-yaochi util_get"
+              class="iconfont iconfuzhi util_get"
               title="点击复制密码"
-              @click="copy(lock.id, lock.password)"
+              @click="copy(lock.id, lock.password, lock.used)"
             ></i>
           </span>
           <span class="content_block WD_w1 MB_w2 tc">
             <i
-              class="iconfont icon-cuowu util_delete"
+              class="iconfont iconcuowu util_delete"
               title="点击删除记录"
               @click="delete_lock(lock.id)"
             ></i>
@@ -78,6 +75,7 @@ import {
   updatePasswordLock,
   deletePasswordLock,
 } from '../api/PasswordLock.js'
+import { PASSWORD_LOCK_TTYPE_DICT } from '../enum/PasswordLock.js'
 
 export default {
   name: 'home',
@@ -92,11 +90,15 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchPasswordLock({ use_pager: 0, orderby: '-created' })
+    let result = await searchPasswordLock({ use_pager: 0, orderby: '-used' })
     this.locks = result.data.data
   },
   methods: {
-    copy(lockId, value) {
+    async copy(lockId, value, used) {
+      let data = {
+        used: used + 1,
+      }
+      await updatePasswordLock(lockId, data)
       let ele = document.getElementById(lockId)
       ele.value = value
       ele.focus()
@@ -119,8 +121,23 @@ export default {
       this.website = ''
     },
     async delete_lock(lockId) {
-      const result = await deletePasswordLock(lockId)
-      this.locks.splice(this.locks.findIndex((item) => item.id === lockId), 1)
+      const h = this.$createElement
+      this.$msgbox({
+        title: '确认删除？',
+        message: h('div', null, []),
+        showClose: false,
+        showCancelButton: true,
+        cancelButtonText: '取消',
+        confirmButtonText: '删除',
+      })
+        .then(async (action) => {
+          const result = await deletePasswordLock(lockId)
+          this.locks.splice(
+            this.locks.findIndex((item) => item.id === lockId),
+            1
+          )
+        })
+        .catch(async (action) => {})
     },
   },
 }
