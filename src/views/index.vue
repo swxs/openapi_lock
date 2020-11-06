@@ -32,14 +32,6 @@
       </li>
       <template v-for="(lock, index) in locks">
         <li class="item_item page_color_yellow" :data-id="lock.id">
-          <span class="content_block" style="width: 0px;padding: 0px;">
-            <input
-              type="text"
-              class="for_copy"
-              :v-model="lock.password"
-              :id="lock.id"
-            />
-          </span>
           <span class="content_block WD_w2 MB_w4">{{ lock.name }}</span>
           <span class="content_block WD_w6 MB_w2">
             <a class="link" :href="lock.website" target="_blank">
@@ -99,11 +91,7 @@ export default {
         used: used + 1,
       }
       await updatePasswordLock(lockId, data)
-      let ele = document.getElementById(lockId)
-      ele.value = value
-      ele.focus()
-      ele.select()
-      document.execCommand('Copy')
+      this.$copyText(value)
     },
     async add_lock() {
       if (this.name === '' || this.name === null) {
