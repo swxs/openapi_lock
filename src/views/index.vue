@@ -30,8 +30,8 @@
           ></i>
         </span>
       </li>
-      <template v-for="(lock, index) in locks">
-        <li class="item_item page_color_yellow" :data-id="lock.id">
+      <template v-for="lock in locks">
+        <li class="item_item page_color_yellow" :key="lock.id">
           <span class="content_block WD_w2 MB_w4">{{ lock.name }}</span>
           <span class="content_block WD_w6 MB_w2">
             <a class="link" :href="lock.website" target="_blank">
@@ -50,12 +50,46 @@
             <i
               class="iconfont iconcuowu util_delete"
               title="点击删除记录"
-              @click="delete_lock(lock.id)"
+              @click="show_dialog(lock)"
             ></i>
           </span>
         </li>
       </template>
     </ul>
+
+    <el-dialog title="确认删除？" :visible.sync="dialogVisible" width="100%">
+      <el-form :model="form">
+        <el-form-item label="名称" :label-width="formLabelWidth">
+          <el-input v-model="form.name" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="网址" :label-width="formLabelWidth">
+          <el-input v-model="form.website" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="自定义?" :label-width="formLabelWidth">
+          <el-switch
+            v-model="form.ttype"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            :active-value="2"
+            :inactive-value="1"
+          >
+          </el-switch>
+        </el-form-item>
+        <el-form-item label="密码" :label-width="formLabelWidth">
+          <el-input
+            v-model="form.custom.password"
+            autocomplete="off"
+            :disabled="form.ttype === 1"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="update_lock()">更 新</el-button>
+        <el-button type="danger" @click="delete_lock()">删 除</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -75,7 +109,16 @@ export default {
     return {
       name: null,
       website: null,
+      dialogVisible: false,
+      changing: null,
+      formLabelWidth: '100px',
       locks: [],
+      form: {
+        name: null,
+        website: null,
+        ttype: null,
+        custom: {},
+      },
     }
   },
   computed: {},
@@ -108,24 +151,43 @@ export default {
       this.name = ''
       this.website = ''
     },
-    async delete_lock(lockId) {
-      const h = this.$createElement
-      this.$msgbox({
-        title: '确认删除？',
-        message: h('div', null, []),
-        showClose: false,
-        showCancelButton: true,
-        cancelButtonText: '取消',
-        confirmButtonText: '删除',
-      })
-        .then(async (action) => {
-          const result = await deletePasswordLock(lockId)
-          this.locks.splice(
-            this.locks.findIndex((item) => item.id === lockId),
-            1
-          )
-        })
-        .catch(async (action) => {})
+    async show_dialog(lock) {
+      this.form.name = lock.name
+      this.form.website = lock.website
+      this.form.ttype = lock.ttype
+      if (lock.custom) {
+        this.form.custom = lock.custom
+      } else {
+        this.form.custom = {}
+      }
+      this.changing = lock
+      this.dialogVisible = true
+    },
+    async update_lock() {
+      let lockId = this.changing.id
+      const result = await updatePasswordLock(lockId, this.form)
+      const lock = await selectPasswordLock(lockId)
+      this.locks.splice(
+        this.locks.findIndex((item) => item.id === lockId),
+        1,
+        lock.data.data
+      )
+      this.dialogVisible = false
+      this.form = {
+        name: null,
+        website: null,
+        ttype: null,
+        custom: {},
+      }
+    },
+    async delete_lock() {
+      let lockId = this.changing.id
+      const result = await deletePasswordLock(lockId)
+      this.locks.splice(
+        this.locks.findIndex((item) => item.id === lockId),
+        1
+      )
+      this.dialogVisible = false
     },
   },
 }
@@ -144,5 +206,8 @@ export default {
 .for_copy {
   position: absolute;
   left: -9999px;
+}
+.el-form-item {
+    margin-bottom: 10px;
 }
 </style>
