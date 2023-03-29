@@ -118,6 +118,7 @@ export default {
   }
   .login-iframe {
     overflow: hidden;
+    padding: 0 20px;
     .login {
       width: 100%;
       height: 100%;

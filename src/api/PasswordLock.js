@@ -1,9 +1,10 @@
 import Vue from 'vue'
 
 const PasswordLockUrl = '/api/password_lock/password_lock/'
+const PasswordLockSearchUrl = '/api/password_lock/searcher/'
 
 export async function searchPasswordLock(data){
-  return Vue.axios.get(`${PasswordLockUrl}`, { params: data })
+  return Vue.axios.get(`${PasswordLockSearchUrl}self`, { params: data })
 }
 
 export async function selectPasswordLock(id){

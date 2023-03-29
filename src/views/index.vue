@@ -102,6 +102,7 @@ import {
   deletePasswordLock,
 } from '../api/PasswordLock.js'
 import { PASSWORD_LOCK_TTYPE_DICT } from '../enum/PasswordLock.js'
+import { getTokenInfo } from '../utils/auth'
 
 export default {
   name: 'home',
@@ -125,7 +126,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchPasswordLock({ use_pager: 0, orderby: '-used' })
+    let result = await searchPasswordLock({ use_pager: 0, order_by: '-used' })
     this.locks = result.data.data
   },
   methods: {
@@ -137,17 +138,18 @@ export default {
       this.$copyText(value)
     },
     async add_lock() {
+      let token_info = getTokenInfo()
       if (this.name === '' || this.name === null) {
         return false
       }
       let data = {
+        user_id: token_info.user_id,
         name: this.name,
         key: this.name,
         website: this.website,
       }
       const passwordLock = await createPasswordLock(data)
-      const result = await selectPasswordLock(passwordLock.data.id)
-      this.locks.splice(0, 0, result.data.data)
+      this.locks.splice(0, 0, passwordLock.data.data)
       this.name = ''
       this.website = ''
     },
@@ -166,11 +168,10 @@ export default {
     async update_lock() {
       let lockId = this.changing.id
       const result = await updatePasswordLock(lockId, this.form)
-      const lock = await selectPasswordLock(lockId)
       this.locks.splice(
         this.locks.findIndex((item) => item.id === lockId),
         1,
-        lock.data.data
+        result.data.data
       )
       this.dialogVisible = false
       this.form = {
@@ -208,6 +209,6 @@ export default {
   left: -9999px;
 }
 .el-form-item {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 </style>
