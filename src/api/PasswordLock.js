@@ -8,7 +8,7 @@ export async function searchPasswordLock(data){
 }
 
 export async function selectPasswordLock(id){
-  return Vue.axios.get(`${PasswordLockUrl}${id}/`)
+  return Vue.axios.get(`${PasswordLockUrl}${id}`)
 }
 
 export async function createPasswordLock(data){
@@ -16,13 +16,13 @@ export async function createPasswordLock(data){
 }
 
 export async function copyPasswordLock(id, data){
-  return Vue.axios.post(`${PasswordLockUrl}${id}/`, data)
+  return Vue.axios.post(`${PasswordLockUrl}${id}`, data)
 }
 
 export async function updatePasswordLock(id, data){
-  return Vue.axios.put(`${PasswordLockUrl}${id}/`, data)
+  return Vue.axios.put(`${PasswordLockUrl}${id}`, data)
 }
 
 export async function deletePasswordLock(id){
-  return Vue.axios.delete(`${PasswordLockUrl}${id}/`)
+  return Vue.axios.delete(`${PasswordLockUrl}${id}`)
 }
