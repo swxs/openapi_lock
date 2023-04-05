@@ -1,7 +1,7 @@
 const TokenKey = 'home_token'
 
 export function getToken() {
-  let token = localStorage.getItem(TokenKey)
+  let token = sessionStorage.getItem(TokenKey)
   if (!token) {
     return null
   }
@@ -9,13 +9,13 @@ export function getToken() {
   if (data.exp * 1000 > new Date().valueOf()) {
     return token
   } else {
-    localStorage.removeItem(TokenKey)
+    sessionStorage.removeItem(TokenKey)
     return null
   }
 }
 
 export function getTokenInfo() {
-  let token = localStorage.getItem(TokenKey)
+  let token = sessionStorage.getItem(TokenKey)
   if (!token) {
     return {}
   }
@@ -23,17 +23,17 @@ export function getTokenInfo() {
   if (data.exp * 1000 > new Date().valueOf()) {
     return data
   } else {
-    localStorage.removeItem(TokenKey)
+    sessionStorage.removeItem(TokenKey)
     return {}
   }
 }
 
 export function setToken(token) {
-  localStorage.setItem(TokenKey, token)
+  sessionStorage.setItem(TokenKey, token)
 }
 
 export function removeToken() {
-  localStorage.removeItem(TokenKey)
+  sessionStorage.removeItem(TokenKey)
 }
 
 export function base2obj(str) {
