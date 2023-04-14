@@ -43,7 +43,7 @@
             <i
               class="iconfont iconfuzhi util_get"
               title="点击复制密码"
-              @click="copy(lock.id, lock.password, lock.used)"
+              @click="copy(lock.id, lock.used)"
             ></i>
           </span>
           <span class="content_block WD_w1 MB_w2 tc">
@@ -100,6 +100,7 @@ import {
   createPasswordLock,
   updatePasswordLock,
   deletePasswordLock,
+  getPassword,
 } from '../api/PasswordLock.js'
 import { PASSWORD_LOCK_TTYPE_DICT } from '../enum/PasswordLock.js'
 import { getTokenInfo } from '../utils/auth'
@@ -131,11 +132,12 @@ export default {
   },
   methods: {
     async copy(lockId, value, used) {
+      const password = await getPassword(lockId)
       let data = {
         used: used + 1,
       }
       await updatePasswordLock(lockId, data)
-      this.$copyText(value)
+      this.$copyText(password.data.password)
     },
     async add_lock() {
       let token_info = getTokenInfo()
