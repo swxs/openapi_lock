@@ -3,6 +3,7 @@
     <ul
       class="infinite-list item_block"
       v-infinite-scroll="load"
+      infinite-scroll-distance="100"
       style="overflow:auto"
     >
       <li class="item_item page_color_yellow">
@@ -149,6 +150,7 @@ export default {
       this.$copyText(password.data.password)
     },
     async search_lock(page) {
+      console.log(this.page, this.count)
       let result = await searchPasswordLock({
         use_pager: 1,
         page: page,
