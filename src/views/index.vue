@@ -1,6 +1,10 @@
 <template>
   <div id="main">
-    <ul class="item_block">
+    <ul
+      class="infinite-list item_block"
+      v-infinite-scroll="load"
+      style="overflow:auto"
+    >
       <li class="item_item page_color_yellow">
         <span class="content_block WD_w2 MB_w4">
           <input
@@ -30,31 +34,33 @@
           ></i>
         </span>
       </li>
-      <template v-for="lock in locks">
-        <li class="item_item page_color_yellow" :key="lock.id">
-          <span class="content_block WD_w2 MB_w4">{{ lock.name }}</span>
-          <span class="content_block WD_w6 MB_w2">
-            <a class="link" :href="lock.website" target="_blank">
-              <span class="MB_hide">{{ lock.website }}</span>
-              <i class="iconfont iconlianjie WD_hide" :title="lock.website"></i>
-            </a>
-          </span>
-          <span class="content_block WD_w1 MB_w2 tc">
-            <i
-              class="iconfont iconfuzhi util_get"
-              title="点击复制密码"
-              @click="copy(lock.id, lock.used)"
-            ></i>
-          </span>
-          <span class="content_block WD_w1 MB_w2 tc">
-            <i
-              class="iconfont iconcuowu util_delete"
-              title="点击删除记录"
-              @click="show_dialog(lock)"
-            ></i>
-          </span>
-        </li>
-      </template>
+      <li
+        class="infinite-list-item item_item page_color_yellow"
+        v-for="lock in locks"
+        :key="lock.id"
+      >
+        <span class="content_block WD_w2 MB_w4">{{ lock.name }}</span>
+        <span class="content_block WD_w6 MB_w2">
+          <a class="link" :href="lock.website" target="_blank">
+            <span class="MB_hide">{{ lock.website }}</span>
+            <i class="iconfont iconlianjie WD_hide" :title="lock.website"></i>
+          </a>
+        </span>
+        <span class="content_block WD_w1 MB_w2 tc">
+          <i
+            class="iconfont iconfuzhi util_get"
+            title="点击复制密码"
+            @click="copy(lock.id, lock.used)"
+          ></i>
+        </span>
+        <span class="content_block WD_w1 MB_w2 tc">
+          <i
+            class="iconfont iconcuowu util_delete"
+            title="点击删除记录"
+            @click="show_dialog(lock)"
+          ></i>
+        </span>
+      </li>
     </ul>
 
     <el-dialog title="确认删除？" :visible.sync="dialogVisible" width="100%">
@@ -109,11 +115,15 @@ export default {
   name: 'home',
   data() {
     return {
+      page: 1,
+      page_number: 20,
+      count: 1,
       name: null,
       website: null,
       dialogVisible: false,
       changing: null,
       formLabelWidth: '100px',
+      loading: false,
       locks: [],
       form: {
         name: null,
@@ -127,8 +137,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    let result = await searchPasswordLock({ use_pager: 0, order_by: '-used' })
-    this.locks = result.data.data
+    this.search_lock(this.page)
   },
   methods: {
     async copy(lockId, value, used) {
@@ -138,6 +147,16 @@ export default {
       }
       await updatePasswordLock(lockId, data)
       this.$copyText(password.data.password)
+    },
+    async search_lock(page) {
+      let result = await searchPasswordLock({
+        use_pager: 1,
+        page: page,
+        page_number: this.page_number,
+        order_by: ['-used', 'created'],
+      })
+      this.count = result.data.pagination.count
+      this.locks = this.locks.concat(result.data.data)
     },
     async add_lock() {
       let token_info = getTokenInfo()
@@ -192,6 +211,12 @@ export default {
       )
       this.dialogVisible = false
     },
+    async load() {
+      if (this.page < this.count) {
+        this.page += 1
+        this.search_lock(this.page)
+      }
+    },
   },
 }
 </script>
@@ -203,9 +228,20 @@ export default {
     padding: 40px 100px;
   }
 }
+
 .content_block {
   text-align: left;
 }
+
+.infinite-list::-webkit-scrollbar {
+  display: none;
+}
+
+.infinite-list {
+  /* 兼容 Firefox */
+  scrollbar-width: none;
+}
+
 .for_copy {
   position: absolute;
   left: -9999px;

@@ -103,7 +103,7 @@ export default {
 
 <style lang="less">
 @import './assets/fonts/iconfont.less';
-@import './assets/style/base.less';
+@import './assets/style/reset.less';
 @import './assets/style/common.less';
 
 .login-block {
