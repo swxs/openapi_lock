@@ -3,7 +3,8 @@
     <ul
       class="infinite-list item_block"
       v-infinite-scroll="load"
-      infinite-scroll-distance="100"
+      infinite-scroll-distance="20"
+      :infinite-scroll-disabled="scroll"
       style="overflow:auto"
     >
       <li class="item_item page_color_yellow">
@@ -125,6 +126,7 @@ export default {
       changing: null,
       formLabelWidth: '100px',
       loading: false,
+      scroll: false,
       locks: [],
       form: {
         name: null,
@@ -138,7 +140,7 @@ export default {
   components: {},
   created() {},
   async mounted() {
-    this.search_lock(this.page)
+    await this.search_lock(this.page)
   },
   methods: {
     async copy(lockId, value, used) {
@@ -151,6 +153,7 @@ export default {
     },
     async search_lock(page) {
       console.log(this.page, this.count)
+      this.scroll = true
       let result = await searchPasswordLock({
         use_pager: 1,
         page: page,
@@ -159,6 +162,7 @@ export default {
       })
       this.count = result.data.pagination.count
       this.locks = this.locks.concat(result.data.data)
+      this.scroll = false
     },
     async add_lock() {
       let token_info = getTokenInfo()
