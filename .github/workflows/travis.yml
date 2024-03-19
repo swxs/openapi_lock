@@ -22,6 +22,7 @@ jobs:
       - name: generate dist folder
         run: |
           npm install -g yarn
+          yarn config set strict-ssl false
           yarn
           yarn build
 
