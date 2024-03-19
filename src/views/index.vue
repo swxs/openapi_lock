@@ -18,7 +18,7 @@
             v-model="name"
           />
         </span>
-        <span class="content_block WD_w7 MB_w4">
+        <span class="content_block WD_w7 MB_w4 delete_search_block">
           <input
             type="text"
             name="website"
@@ -30,9 +30,22 @@
         </span>
         <span class="content_block WD_w1 MB_w2 tc">
           <i
-            class="iconfont iconbi util_add"
+            v-if="name"
+            class="iconfont iconbi"
             title="点击添加记录"
             @click="add_lock"
+          ></i>
+          <i
+            v-else-if="hasSearched"
+            class="iconfont iconcuowu"
+            title="点击删除搜素记录"
+            @click="refresh_search_lock"
+          ></i>
+          <i
+            v-else
+            class="iconfont iconsousuo"
+            title="点击搜索记录"
+            @click="search_lock_name"
           ></i>
         </span>
       </li>
@@ -50,14 +63,14 @@
         </span>
         <span class="content_block WD_w1 MB_w2 tc">
           <i
-            class="iconfont iconfuzhi util_get"
+            class="iconfont iconfuzhi"
             title="点击复制密码"
             @click="copy(lock.id, lock.used)"
           ></i>
         </span>
         <span class="content_block WD_w1 MB_w2 tc">
           <i
-            class="iconfont iconcuowu util_delete"
+            class="iconfont iconcuowu"
             title="点击删除记录"
             @click="show_dialog(lock)"
           ></i>
@@ -118,10 +131,10 @@ export default {
   data() {
     return {
       page: 1,
-      page_number: 20,
       count: 1,
       name: null,
       website: null,
+      searched: null,
       dialogVisible: false,
       changing: null,
       formLabelWidth: '100px',
@@ -136,14 +149,18 @@ export default {
       },
     }
   },
-  computed: {},
+  computed: {
+    hasSearched() {
+      return !!this.searched & (this.website == this.searched)
+    },
+  },
   components: {},
   created() {},
   async mounted() {
     await this.search_lock(this.page)
   },
   methods: {
-    async copy(lockId, value, used) {
+    async copy(lockId, used) {
       const password = await getPassword(lockId)
       let data = {
         used: used + 1,
@@ -157,12 +174,34 @@ export default {
       let result = await searchPasswordLock({
         use_pager: 1,
         page: page,
-        page_number: this.page_number,
+        page_number: 20,
         order_by: ['-used', 'created'],
       })
       this.count = result.data.pagination.count
       this.locks = this.locks.concat(result.data.data)
       this.scroll = false
+    },
+    async refresh_search_lock() {
+      this.page = 1
+      this.count = 1
+      this.website = null
+      this.searched = null
+      this.locks = []
+      this.search_lock(this.page)
+    },
+    async search_lock_name(){
+      if(!this.website) {
+        this.refresh_search_lock()
+      } else {
+
+        let result = await searchPasswordLock({
+          use_pager: 0,
+          order_by: ['-used', 'created'],
+          search: this.website,
+        })
+        this.searched = this.website
+        this.locks = result.data.data
+      }
     },
     async add_lock() {
       let token_info = getTokenInfo()
@@ -237,6 +276,16 @@ export default {
 
 .content_block {
   text-align: left;
+}
+
+.delete_search_block {
+  position: relative;
+
+  .delete_search {
+    position: absolute;
+    right: 0;
+  }
+
 }
 
 .infinite-list::-webkit-scrollbar {
