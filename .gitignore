@@ -2,6 +2,9 @@
 node_modules
 /dist
 
+# document created by LLM
+docs/
+
 # local env files
 .env.local
 .env.*.local

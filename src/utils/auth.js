@@ -1,15 +1,33 @@
 const TokenKey = 'home_token'
+const RefreshTokenKey = 'home_refresh_token'
 
 export function getToken() {
   let token = sessionStorage.getItem(TokenKey)
+  console.log('[Auth] getToken:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
+  
   if (!token) {
+    console.log('[Auth] 没有token')
     return null
   }
-  let data = base2obj(token)
-  if (data.exp * 1000 > new Date().valueOf()) {
-    return token
-  } else {
-    sessionStorage.removeItem(TokenKey)
+  
+  try {
+    let data = base2obj(token)
+    console.log('[Auth] Token解析结果:', {
+      hasExp: !!data.exp,
+      exp: data.exp ? new Date(data.exp * 1000).toISOString() : 'N/A',
+      now: new Date().toISOString(),
+    })
+    
+    if (data.exp && data.exp * 1000 > new Date().valueOf()) {
+      console.log('[Auth] Token有效')
+      return token
+    } else {
+      console.log('[Auth] Token已过期，清除')
+      sessionStorage.removeItem(TokenKey)
+      return null
+    }
+  } catch (e) {
+    console.error('[Auth] Token解析失败:', e)
     return null
   }
 }
@@ -28,12 +46,37 @@ export function getTokenInfo() {
   }
 }
 
+export function getRefreshToken() {
+  return sessionStorage.getItem(RefreshTokenKey)
+}
+
 export function setToken(token) {
-  sessionStorage.setItem(TokenKey, token)
+  console.log('[Auth] setToken:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
+  if (token) {
+    sessionStorage.setItem(TokenKey, token)
+    console.log('[Auth] Token已保存到sessionStorage')
+    
+    // 验证是否保存成功
+    const saved = sessionStorage.getItem(TokenKey)
+    console.log('[Auth] Token保存验证:', { saved: !!saved, length: saved ? saved.length : 0 })
+  } else {
+    console.warn('[Auth] 尝试设置空token')
+  }
+}
+
+export function setRefreshToken(token) {
+  console.log('[Auth] setRefreshToken:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
+  if (token) {
+    sessionStorage.setItem(RefreshTokenKey, token)
+    console.log('[Auth] Refresh token已保存到sessionStorage')
+  }
 }
 
 export function removeToken() {
+  console.log('[Auth] removeToken: 清除所有token')
   sessionStorage.removeItem(TokenKey)
+  sessionStorage.removeItem(RefreshTokenKey)
+  console.log('[Auth] Token已清除')
 }
 
 export function base2obj(str) {
