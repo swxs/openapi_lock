@@ -24,7 +24,7 @@ export function generateState() {
 }
 
 /**
- * 保存state到localStorage（重定向会丢失sessionStorage）
+ * 保存state到localStorage
  */
 export function saveState(state) {
   try {
@@ -40,49 +40,34 @@ export function saveState(state) {
     }
   } catch (e) {
     console.error('[OAuth] 保存state到localStorage失败:', e)
-    // 如果localStorage失败，尝试使用sessionStorage作为降级方案
-    try {
-      sessionStorage.setItem(OAUTH_STATE_KEY, state)
-      console.log('[OAuth] State已保存到sessionStorage（降级方案）:', state)
-    } catch (e2) {
-      console.error('[OAuth] 保存state到sessionStorage也失败:', e2)
-    }
+    throw e
   }
 }
 
 /**
- * 获取state（不清除，用于验证）
+ * 获取state（不删除，用于验证）
  */
 export function getState() {
   const state = localStorage.getItem(OAUTH_STATE_KEY)
-  console.log('[OAuth] 从localStorage获取state（不清除）:', state)
+  console.log('[OAuth] 从localStorage获取state（不删除）:', state)
   return state
 }
 
 /**
- * 获取并清除state
+ * 清除state
  */
-export function getAndClearState() {
+export function clearState() {
   const state = localStorage.getItem(OAUTH_STATE_KEY)
-  console.log('[OAuth] 从localStorage获取state:', state)
   if (state) {
     localStorage.removeItem(OAUTH_STATE_KEY)
-    console.log('[OAuth] State已从localStorage清除')
+    console.log('[OAuth] State已从localStorage清除:', state)
   } else {
-    console.warn('[OAuth] State不存在于localStorage，可能的原因：1. 重定向前未保存 2. 跨域问题 3. 被其他代码清除')
-    // 尝试从sessionStorage读取（兼容旧版本）
-    const sessionState = sessionStorage.getItem(OAUTH_STATE_KEY)
-    if (sessionState) {
-      console.log('[OAuth] 从sessionStorage找到state（兼容模式）:', sessionState)
-      sessionStorage.removeItem(OAUTH_STATE_KEY)
-      return sessionState
-    }
+    console.warn('[OAuth] State不存在于localStorage，无法清除')
   }
-  return state
 }
 
 /**
- * 保存重定向前的URL（重定向会丢失sessionStorage）
+ * 保存重定向前的URL
  */
 export function saveRedirectUri(uri) {
   localStorage.setItem(OAUTH_REDIRECT_KEY, uri)
@@ -174,28 +159,26 @@ export function redirectToAuthorization(currentPath = window.location.pathname) 
 export async function handleOAuthCallback(code, state) {
   console.log('[OAuth] handleOAuthCallback 开始，code长度:', code ? code.length : 0, 'state:', state)
   
-  // 先获取state（不清除），用于调试
-  const savedStateBeforeClear = getState()
+  // 获取保存的state（不删除），用于验证
+  const savedState = getState()
   console.log('[OAuth] State验证前检查:', { 
-    savedState: savedStateBeforeClear, 
+    savedState: savedState, 
     receivedState: state, 
-    match: savedStateBeforeClear === state,
+    match: savedState === state,
     localStorageKeys: Object.keys(localStorage).filter(k => k.includes('oauth') || k.includes('state')),
   })
   
-  // 验证state
-  const savedState = getAndClearState()
-  console.log('[OAuth] State验证:', { savedState, receivedState: state, match: savedState === state })
-  
+  // 验证state（不删除）
   if (!savedState || savedState !== state) {
     console.error('[OAuth] State验证失败:', { 
       savedState, 
       receivedState: state,
-      localStorageState: savedStateBeforeClear,
       allLocalStorageKeys: Object.keys(localStorage),
     })
     return false
   }
+  
+  console.log('[OAuth] State验证通过:', { savedState, receivedState: state })
 
   try {
     console.log('[OAuth] 开始用授权码换取token')
@@ -222,6 +205,10 @@ export async function handleOAuthCallback(code, state) {
       // 验证token是否已保存
       const savedToken = authModule.getToken()
       console.log('[OAuth] Token保存验证:', { saved: !!savedToken, length: savedToken ? savedToken.length : 0 })
+      
+      // Token获取成功后，清除state
+      clearState()
+      console.log('[OAuth] Token获取成功，已清除state')
       
       return true
     }
