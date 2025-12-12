@@ -2,7 +2,7 @@ const TokenKey = 'home_token'
 const RefreshTokenKey = 'home_refresh_token'
 
 export function getToken() {
-  let token = sessionStorage.getItem(TokenKey)
+  let token = localStorage.getItem(TokenKey)
   console.log('[Auth] getToken:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
   
   if (!token) {
@@ -23,7 +23,7 @@ export function getToken() {
       return token
     } else {
       console.log('[Auth] Token已过期，清除')
-      sessionStorage.removeItem(TokenKey)
+      localStorage.removeItem(TokenKey)
       return null
     }
   } catch (e) {
@@ -33,7 +33,7 @@ export function getToken() {
 }
 
 export function getTokenInfo() {
-  let token = sessionStorage.getItem(TokenKey)
+  let token = localStorage.getItem(TokenKey)
   if (!token) {
     return {}
   }
@@ -41,23 +41,23 @@ export function getTokenInfo() {
   if (data.exp * 1000 > new Date().valueOf()) {
     return data
   } else {
-    sessionStorage.removeItem(TokenKey)
+    localStorage.removeItem(TokenKey)
     return {}
   }
 }
 
 export function getRefreshToken() {
-  return sessionStorage.getItem(RefreshTokenKey)
+  return localStorage.getItem(RefreshTokenKey)
 }
 
 export function setToken(token) {
   console.log('[Auth] setToken:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
   if (token) {
-    sessionStorage.setItem(TokenKey, token)
-    console.log('[Auth] Token已保存到sessionStorage')
+    localStorage.setItem(TokenKey, token)
+    console.log('[Auth] Token已保存到localStorage')
     
     // 验证是否保存成功
-    const saved = sessionStorage.getItem(TokenKey)
+    const saved = localStorage.getItem(TokenKey)
     console.log('[Auth] Token保存验证:', { saved: !!saved, length: saved ? saved.length : 0 })
   } else {
     console.warn('[Auth] 尝试设置空token')
@@ -67,15 +67,15 @@ export function setToken(token) {
 export function setRefreshToken(token) {
   console.log('[Auth] setRefreshToken:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
   if (token) {
-    sessionStorage.setItem(RefreshTokenKey, token)
-    console.log('[Auth] Refresh token已保存到sessionStorage')
+    localStorage.setItem(RefreshTokenKey, token)
+    console.log('[Auth] Refresh token已保存到localStorage')
   }
 }
 
 export function removeToken() {
   console.log('[Auth] removeToken: 清除所有token')
-  sessionStorage.removeItem(TokenKey)
-  sessionStorage.removeItem(RefreshTokenKey)
+  localStorage.removeItem(TokenKey)
+  localStorage.removeItem(RefreshTokenKey)
   console.log('[Auth] Token已清除')
 }
 

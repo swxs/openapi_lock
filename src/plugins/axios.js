@@ -62,13 +62,67 @@ service.interceptors.request.use(
       console.log('[Axios] 已添加Authorization header')
       return config
     } else {
-      // 没有token，重定向到授权服务器
-      console.log('[Axios] 没有token，准备重定向到授权服务器')
-      const currentPath = window.location.pathname + window.location.search
-      console.log('[Axios] 当前路径:', currentPath)
-      redirectToAuthorization(currentPath)
-      // 返回一个永远不会resolve的Promise，阻止请求继续
-      return new Promise(() => {})
+      // 没有token，先检查是否有refresh_token
+      const refreshToken = getRefreshToken()
+      
+      if (refreshToken) {
+        // 有refresh_token，尝试刷新
+        if (isRefreshing) {
+          // 正在刷新中，将请求加入等待队列
+          console.log('[Axios] Token正在刷新中，将请求加入等待队列')
+          return new Promise((resolve) => {
+            subscribeTokenRefresh((newToken) => {
+              console.log('[Axios] 从等待队列中获取新token，继续请求')
+              config.headers.Authorization = `Bearer ${newToken}`
+              resolve(config)
+            })
+          })
+        } else {
+          // 开始刷新流程
+          console.log('[Axios] 没有token但有refreshToken，开始刷新token')
+          isRefreshing = true
+          
+          return new Promise((resolve, reject) => {
+            refreshAccessToken(refreshToken)
+              .then(() => {
+                const newToken = getToken()
+                if (newToken) {
+                  console.log('[Axios] Token刷新成功，继续请求')
+                  // 通知等待队列中的请求
+                  onRrefreshed(newToken)
+                  isRefreshing = false
+                  // 继续当前请求
+                  config.headers.Authorization = `Bearer ${newToken}`
+                  resolve(config)
+                } else {
+                  // 刷新失败，清除token并重定向
+                  console.error('[Axios] 刷新token后仍无法获取新token')
+                  removeToken()
+                  isRefreshing = false
+                  const currentPath = window.location.pathname + window.location.search
+                  redirectToAuthorization(currentPath)
+                  reject(new Error('Token刷新失败'))
+                }
+              })
+              .catch((refreshError) => {
+                console.error('[Axios] 刷新token失败:', refreshError)
+                removeToken()
+                isRefreshing = false
+                const currentPath = window.location.pathname + window.location.search
+                redirectToAuthorization(currentPath)
+                reject(refreshError)
+              })
+          })
+        }
+      } else {
+        // 没有token也没有refreshToken，重定向到授权服务器
+        console.log('[Axios] 没有token且没有refreshToken，准备重定向到授权服务器')
+        const currentPath = window.location.pathname + window.location.search
+        console.log('[Axios] 当前路径:', currentPath)
+        redirectToAuthorization(currentPath)
+        // 返回一个永远不会resolve的Promise，阻止请求继续
+        return new Promise(() => {})
+      }
     }
   },
   (error) => {
