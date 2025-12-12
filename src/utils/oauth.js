@@ -13,6 +13,8 @@ const OAUTH_CONFIG = {
 // 存储state的key
 const OAUTH_STATE_KEY = 'oauth_state'
 const OAUTH_REDIRECT_KEY = 'oauth_redirect_uri'
+// State过期时间（毫秒），30秒
+const OAUTH_STATE_EXPIRES_MS = 30 * 1000
 
 /**
  * 生成随机state参数（用于CSRF防护）
@@ -24,17 +26,27 @@ export function generateState() {
 }
 
 /**
- * 保存state到localStorage
+ * 保存state到localStorage（带过期时间）
  */
 export function saveState(state) {
   try {
-    localStorage.setItem(OAUTH_STATE_KEY, state)
-    console.log('[OAuth] State已保存到localStorage:', state)
+    const expires = Date.now() + OAUTH_STATE_EXPIRES_MS
+    const stateData = {
+      value: state,
+      expires: expires,
+    }
+    const stateJson = JSON.stringify(stateData)
+    localStorage.setItem(OAUTH_STATE_KEY, stateJson)
+    console.log('[OAuth] State已保存到localStorage:', {
+      state: state,
+      expires: new Date(expires).toISOString(),
+      expiresIn: OAUTH_STATE_EXPIRES_MS / 1000 + '秒',
+    })
     
     // 验证保存是否成功
     const saved = localStorage.getItem(OAUTH_STATE_KEY)
-    if (saved !== state) {
-      console.error('[OAuth] State保存验证失败！', { expected: state, saved })
+    if (saved !== stateJson) {
+      console.error('[OAuth] State保存验证失败！', { expected: stateJson, saved })
     } else {
       console.log('[OAuth] State保存验证成功')
     }
@@ -45,24 +57,87 @@ export function saveState(state) {
 }
 
 /**
- * 获取state（不删除，用于验证）
+ * 获取state（不删除，用于验证），如果过期则自动清除
  */
 export function getState() {
-  const state = localStorage.getItem(OAUTH_STATE_KEY)
-  console.log('[OAuth] 从localStorage获取state（不删除）:', state)
-  return state
+  try {
+    const stateJson = localStorage.getItem(OAUTH_STATE_KEY)
+    if (!stateJson) {
+      console.log('[OAuth] 从localStorage获取state（不删除）: null')
+      return null
+    }
+    
+    // 解析存储的数据
+    let stateData
+    try {
+      stateData = JSON.parse(stateJson)
+    } catch (e) {
+      // 兼容旧格式（直接存储字符串的情况）
+      console.warn('[OAuth] State格式为旧格式，自动清除:', stateJson)
+      localStorage.removeItem(OAUTH_STATE_KEY)
+      return null
+    }
+    
+    // 检查是否过期
+    const now = Date.now()
+    if (now > stateData.expires) {
+      console.warn('[OAuth] State已过期，自动清除:', {
+        state: stateData.value,
+        expires: new Date(stateData.expires).toISOString(),
+        now: new Date(now).toISOString(),
+        expiredBy: Math.round((now - stateData.expires) / 1000) + '秒',
+      })
+      localStorage.removeItem(OAUTH_STATE_KEY)
+      return null
+    }
+    
+    // 计算剩余时间
+    const remaining = Math.round((stateData.expires - now) / 1000)
+    console.log('[OAuth] 从localStorage获取state（不删除）:', {
+      state: stateData.value,
+      expires: new Date(stateData.expires).toISOString(),
+      remaining: remaining + '秒',
+    })
+    
+    return stateData.value
+  } catch (e) {
+    console.error('[OAuth] 获取state失败:', e)
+    // 出错时清除可能损坏的数据
+    localStorage.removeItem(OAUTH_STATE_KEY)
+    return null
+  }
 }
 
 /**
  * 清除state
  */
 export function clearState() {
-  const state = localStorage.getItem(OAUTH_STATE_KEY)
-  if (state) {
-    localStorage.removeItem(OAUTH_STATE_KEY)
-    console.log('[OAuth] State已从localStorage清除:', state)
-  } else {
-    console.warn('[OAuth] State不存在于localStorage，无法清除')
+  try {
+    const stateJson = localStorage.getItem(OAUTH_STATE_KEY)
+    if (stateJson) {
+      // 尝试解析以获取实际的 state 值用于日志
+      let stateValue = null
+      try {
+        const stateData = JSON.parse(stateJson)
+        stateValue = stateData.value
+      } catch (e) {
+        // 如果是旧格式，直接使用原始值
+        stateValue = stateJson
+      }
+      
+      localStorage.removeItem(OAUTH_STATE_KEY)
+      console.log('[OAuth] State已从localStorage清除:', stateValue)
+    } else {
+      console.warn('[OAuth] State不存在于localStorage，无法清除')
+    }
+  } catch (e) {
+    console.error('[OAuth] 清除state失败:', e)
+    // 即使出错也尝试清除
+    try {
+      localStorage.removeItem(OAUTH_STATE_KEY)
+    } catch (e2) {
+      console.error('[OAuth] 强制清除state也失败:', e2)
+    }
   }
 }
 
@@ -109,8 +184,10 @@ export function buildAuthorizationUrl(state) {
  */
 export function redirectToAuthorization(currentPath = window.location.pathname) {
   console.log('[OAuth] redirectToAuthorization 开始，当前路径:', currentPath)
+  const currentState = getState()
   console.log('[OAuth] 当前localStorage状态:', {
-    hasState: !!localStorage.getItem(OAUTH_STATE_KEY),
+    hasState: !!currentState,
+    state: currentState,
     hasRedirectUri: !!localStorage.getItem(OAUTH_REDIRECT_KEY),
     allKeys: Object.keys(localStorage).filter(k => k.includes('oauth') || k.includes('state')),
   })
@@ -126,7 +203,7 @@ export function redirectToAuthorization(currentPath = window.location.pathname) 
   console.log('[OAuth] 已生成并保存state:', state)
   
   // 再次验证state是否保存成功
-  const verifyState = localStorage.getItem(OAUTH_STATE_KEY)
+  const verifyState = getState()
   console.log('[OAuth] State保存后验证:', { 
     expected: state, 
     saved: verifyState, 
@@ -150,6 +227,9 @@ export function redirectToAuthorization(currentPath = window.location.pathname) 
   window.location.href = authUrl
 }
 
+// 防止重复请求的标记
+let isExchangingToken = false
+
 /**
  * 处理OAuth回调
  * @param {string} code - 授权码
@@ -158,6 +238,12 @@ export function redirectToAuthorization(currentPath = window.location.pathname) 
  */
 export async function handleOAuthCallback(code, state) {
   console.log('[OAuth] handleOAuthCallback 开始，code长度:', code ? code.length : 0, 'state:', state)
+  
+  // 防止重复请求
+  if (isExchangingToken) {
+    console.warn('[OAuth] Token交换正在进行中，忽略重复请求')
+    return false
+  }
   
   // 获取保存的state（不删除），用于验证
   const savedState = getState()
@@ -175,11 +261,16 @@ export async function handleOAuthCallback(code, state) {
       receivedState: state,
       allLocalStorageKeys: Object.keys(localStorage),
     })
+    // State验证失败时清除state，避免重复验证
+    clearState()
     return false
   }
   
   console.log('[OAuth] State验证通过:', { savedState, receivedState: state })
 
+  // 设置标记，防止重复请求
+  isExchangingToken = true
+  
   try {
     console.log('[OAuth] 开始用授权码换取token')
     // 用授权码换取token
@@ -210,13 +301,21 @@ export async function handleOAuthCallback(code, state) {
       clearState()
       console.log('[OAuth] Token获取成功，已清除state')
       
+      isExchangingToken = false
       return true
     }
     console.error('[OAuth] Token响应中没有access_token')
+    isExchangingToken = false
+    // 清除state，避免重复尝试
+    clearState()
     return false
   } catch (error) {
     console.error('[OAuth] OAuth回调处理失败:', error)
-    return false
+    // 清除标记和state，允许重试
+    isExchangingToken = false
+    clearState()
+    // 重新抛出错误，让调用者知道具体错误信息
+    throw error
   }
 }
 
@@ -251,13 +350,27 @@ async function exchangeCodeForToken(code) {
     client_id: OAUTH_CONFIG.clientId,
   })
 
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: formData.toString(),
-  })
+  let response
+  try {
+    response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+      // 如果需要携带凭证，取消注释下面这行
+      // credentials: 'include',
+    })
+  } catch (fetchError) {
+    // 捕获网络错误（包括 CORS 错误）
+    console.error('[OAuth] Fetch 请求失败:', fetchError)
+    const errorMessage = fetchError.message || '网络请求失败'
+    // 检查是否是 CORS 错误
+    if (errorMessage.includes('CORS') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+      throw new Error(`CORS错误: 无法连接到授权服务器。请检查服务器CORS配置是否允许来自 ${window.location.origin} 的请求。原始错误: ${errorMessage}`)
+    }
+    throw new Error(`网络错误: ${errorMessage}`)
+  }
 
   console.log('[OAuth] 响应状态:', response.status, response.statusText)
 
@@ -274,13 +387,19 @@ async function exchangeCodeForToken(code) {
     throw new Error(errorData.message || errorData.error_description || errorData.error || '获取token失败')
   }
 
-  const result = await response.json()
-  console.log('[OAuth] Token获取成功:', {
-    hasAccessToken: !!result.access_token,
-    hasRefreshToken: !!result.refresh_token,
-    tokenType: result.token_type,
-    expiresIn: result.expires_in,
-  })
+  let result
+  try {
+    result = await response.json()
+    console.log('[OAuth] Token获取成功:', {
+      hasAccessToken: !!result.access_token,
+      hasRefreshToken: !!result.refresh_token,
+      tokenType: result.token_type,
+      expiresIn: result.expires_in,
+    })
+  } catch (parseError) {
+    console.error('[OAuth] 解析响应JSON失败:', parseError)
+    throw new Error('服务器响应格式错误，无法解析JSON')
+  }
   
   return result
 }

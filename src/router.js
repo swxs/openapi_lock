@@ -31,20 +31,39 @@ const router = new Router({
           
           if (callbackParams.code && callbackParams.state) {
             // 处理OAuth回调
-            const success = await handleOAuthCallback(callbackParams.code, callbackParams.state)
-            
-            if (success) {
-              // 授权成功，重定向到之前保存的路径
-              const redirectUri = getAndClearRedirectUri()
-              const targetPath = redirectUri || '/'
+            try {
+              const success = await handleOAuthCallback(callbackParams.code, callbackParams.state)
               
-              // 在hash模式下，需要手动清理URL中的查询参数
+              if (success) {
+                // 授权成功，重定向到之前保存的路径
+                const redirectUri = getAndClearRedirectUri()
+                const targetPath = redirectUri || '/'
+                
+                // 在hash模式下，需要手动清理URL中的查询参数
+                const baseUrl = window.location.origin
+                const hashPath = targetPath.startsWith('/') ? targetPath : '/' + targetPath
+                const cleanUrl = baseUrl + '#' + hashPath
+                console.log('[Router] OAuth授权成功，准备跳转到:', cleanUrl)
+                window.location.replace(cleanUrl)
+              } else {
+                // 授权失败，清除URL中的OAuth参数并跳转
+                console.error('[Router] OAuth授权失败，清除URL参数并跳转')
+                const baseUrl = window.location.origin
+                const cleanUrl = baseUrl + '#/?error=authorization_failed'
+                console.log('[Router] 准备跳转到错误页面:', cleanUrl)
+                window.location.replace(cleanUrl)
+              }
+            } catch (error) {
+              // 捕获所有错误（包括网络错误、CORS错误等）
+              console.error('[Router] OAuth回调处理异常:', error)
               const baseUrl = window.location.origin
-              const hashPath = targetPath.startsWith('/') ? targetPath : '/' + targetPath
-              const cleanUrl = baseUrl + '#' + hashPath
+              const errorMessage = error.message || 'authorization_failed'
+              // URL编码错误信息
+              const encodedError = encodeURIComponent(errorMessage)
+              const cleanUrl = baseUrl + `#/?error=authorization_failed&error_description=${encodedError}`
+              console.log('[Router] 发生异常，准备跳转到错误页面:', cleanUrl)
+              // 使用 replace 确保不会在历史记录中留下记录
               window.location.replace(cleanUrl)
-            } else {
-              next({ path: '/', query: { error: 'authorization_failed' } })
             }
             return
           }
