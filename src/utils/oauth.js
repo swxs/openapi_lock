@@ -2,6 +2,8 @@
  * OAuth2.0 客户端工具函数
  */
 
+import { setToken, setRefreshToken, getToken } from './auth'
+
 // OAuth配置（从环境变量读取）
 const OAUTH_CONFIG = {
   authorizationServer: process.env.VUE_APP_OAUTH_SERVER_URL || 'http://127.0.0.1:8090',
@@ -284,17 +286,16 @@ export async function handleOAuthCallback(code, state) {
     if (tokenResponse && tokenResponse.access_token) {
       console.log('[OAuth] 开始保存token')
       // 保存token
-      const authModule = await import('./auth')
-      authModule.setToken(tokenResponse.access_token)
+      setToken(tokenResponse.access_token)
       console.log('[OAuth] Access token已保存，长度:', tokenResponse.access_token.length)
       
       if (tokenResponse.refresh_token) {
-        authModule.setRefreshToken(tokenResponse.refresh_token)
+        setRefreshToken(tokenResponse.refresh_token)
         console.log('[OAuth] Refresh token已保存，长度:', tokenResponse.refresh_token.length)
       }
       
       // 验证token是否已保存
-      const savedToken = authModule.getToken()
+      const savedToken = getToken()
       console.log('[OAuth] Token保存验证:', { saved: !!savedToken, length: savedToken ? savedToken.length : 0 })
       
       // Token获取成功后，清除state
@@ -452,12 +453,11 @@ export async function refreshAccessToken(refreshToken) {
   })
   
   // 更新token
-  const authModule = await import('./auth')
-  authModule.setToken(tokenResponse.access_token)
+  setToken(tokenResponse.access_token)
   console.log('[OAuth] 新access token已保存')
   
   if (tokenResponse.refresh_token) {
-    authModule.setRefreshToken(tokenResponse.refresh_token)
+    setRefreshToken(tokenResponse.refresh_token)
     console.log('[OAuth] 新refresh token已保存')
   }
   

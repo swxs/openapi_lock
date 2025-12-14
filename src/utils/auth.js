@@ -47,7 +47,34 @@ export function getTokenInfo() {
 }
 
 export function getRefreshToken() {
-  return localStorage.getItem(RefreshTokenKey)
+  let refreshToken = localStorage.getItem(RefreshTokenKey)
+  console.log('[Auth] getRefreshToken:', { hasRefreshToken: !!refreshToken, tokenLength: refreshToken ? refreshToken.length : 0 })
+  
+  if (!refreshToken) {
+    console.log('[Auth] 没有refreshToken')
+    return null
+  }
+  
+  try {
+    let data = base2obj(refreshToken)
+    console.log('[Auth] RefreshToken解析结果:', {
+      hasExp: !!data.exp,
+      exp: data.exp ? new Date(data.exp * 1000).toISOString() : 'N/A',
+      now: new Date().toISOString(),
+    })
+    
+    if (data.exp && data.exp * 1000 > new Date().valueOf()) {
+      console.log('[Auth] RefreshToken有效')
+      return refreshToken
+    } else {
+      console.log('[Auth] RefreshToken已过期，清除')
+      localStorage.removeItem(RefreshTokenKey)
+      return null
+    }
+  } catch (e) {
+    console.error('[Auth] RefreshToken解析失败:', e)
+    return null
+  }
 }
 
 export function setToken(token) {

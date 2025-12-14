@@ -162,10 +162,10 @@ export default {
   methods: {
     async copy(lockId, used) {
       const password = await getPassword(lockId)
-      let data = {
-        used: used + 1,
+      const lockIndex = this.locks.findIndex((item) => item.id === lockId)
+      if (lockIndex !== -1) {
+        this.locks[lockIndex].used = used + 1
       }
-      await updatePasswordLock(lockId, data)
       this.$copyText(password.data.password)
     },
     async search_lock(page) {

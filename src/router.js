@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Index from './views/index.vue'
-import { getToken } from './utils/auth'
-import { parseOAuthCallback, handleOAuthCallback, getAndClearRedirectUri } from './utils/oauth'
+import { getToken, getRefreshToken } from './utils/auth'
+import { parseOAuthCallback, handleOAuthCallback, getAndClearRedirectUri, redirectToAuthorization } from './utils/oauth'
 
 Vue.use(Router)
 
@@ -110,23 +110,30 @@ router.beforeEach((to, from, next) => {
   
   // 检查路由是否需要认证
   if (to.matched.some(record => record.meta.requiresAuth)) {
+    // 检查是否有认证凭证（token 或 refresh_token）
     const token = getToken()
-    console.log('[Router] Token检查结果:', { hasToken: !!token, tokenLength: token ? token.length : 0 })
+    const refreshToken = getRefreshToken()
     
-    if (!token) {
-      import('./utils/oauth').then(oauthModule => {
-        console.log('[Router] 调用redirectToAuthorization')
-        oauthModule.redirectToAuthorization(to.fullPath)
-      })
-      return
+    console.log('[Router] 认证检查:', { 
+      hasToken: !!token, 
+      hasRefreshToken: !!refreshToken 
+    })
+    
+    if (token || refreshToken) {
+      // 有 token 或 refresh_token，允许通过
+      // 如果只有 refresh_token，axios 拦截器会在请求时自动刷新
+      console.log('[Router] 有认证凭证，允许访问')
+      next()
     } else {
-      console.log('[Router] Token有效，允许访问')
+      // 没有认证凭证，重定向到授权页面
+      console.log('[Router] 没有认证凭证，重定向到授权服务器')
+      redirectToAuthorization(to.fullPath)
+      return
     }
   } else {
     console.log('[Router] 路由不需要认证，直接通过')
+    next()
   }
-  
-  next()
 })
 
 export default router
